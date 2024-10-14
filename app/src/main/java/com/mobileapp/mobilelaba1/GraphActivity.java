@@ -2,12 +2,16 @@ package com.mobileapp.mobilelaba1;
 
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.softmoore.android.graphlib.Graph;
 import com.softmoore.android.graphlib.GraphView;
 import com.softmoore.android.graphlib.Point;
+
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class GraphActivity extends AppCompatActivity {
 
@@ -16,7 +20,12 @@ public class GraphActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
 
-        String coefficientsText = getIntent().getStringExtra("coefficients");
+        String coefficientsText = readCoefficientsFromFile();
+        if (coefficientsText == null || coefficientsText.isEmpty()) {
+            Toast.makeText(this, "Не вдалося завантажити коефіцієнти з файлу", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String functionType = getIntent().getStringExtra("functionType");
         String[] coefficientsArray = coefficientsText.split(",");
         double[] coefficients = new double[coefficientsArray.length];
@@ -34,6 +43,7 @@ public class GraphActivity extends AppCompatActivity {
             } else if (functionType.equals("Квадратична")) {
                 y = coefficients[0] * x * x + coefficients[1] * x + coefficients[2];
             } else {
+                Toast.makeText(this, "Невідомий тип функції", Toast.LENGTH_SHORT).show();
                 return;
             }
             points[i] = new Point(x, y);
@@ -48,5 +58,21 @@ public class GraphActivity extends AppCompatActivity {
         // Відображення графіка
         GraphView graphView = findViewById(R.id.graph_view);
         graphView.setGraph(graph);
+    }
+
+    private String readCoefficientsFromFile() {
+        StringBuilder coefficientsText = new StringBuilder();
+        try {
+            FileInputStream fis = openFileInput("coefficients.txt");
+            int c;
+            while ((c = fis.read()) != -1) {
+                coefficientsText.append((char) c);
+            }
+            fis.close();
+        } catch (IOException e) {
+            Toast.makeText(this, "Помилка під час читання файлу: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            return null;
+        }
+        return coefficientsText.toString();
     }
 }
